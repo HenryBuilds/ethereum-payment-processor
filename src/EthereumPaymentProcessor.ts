@@ -1,19 +1,16 @@
 import { ethers } from "ethers";
 import { CreatePaymentRequest, Payment } from "./types";
 import axios from "axios";
+import logger from "./logger";
+import { env } from "./env";
 
 export class EthereumPaymentProcessor {
   private payments: Map<string, Payment> = new Map();
   private provider: ethers.JsonRpcProvider;
   private pollingInterval: NodeJS.Timeout | null = null;
   
-  private readonly MASTER_ADDRESS = process.env.MASTER_ADDRESS
-  private readonly RPC_URL = process.env.RPC_URL
-  private readonly POLLING_INTERVAL = 30000; // every 30 seconds
-  private readonly GAS_LIMIT = 21000;
-  
   constructor() {
-    this.provider = new ethers.JsonRpcProvider(this.RPC_URL);
+    this.provider = new ethers.JsonRpcProvider(env.RPC_URL);
     
     this.startPollingService();
   }
@@ -34,7 +31,7 @@ export class EthereumPaymentProcessor {
     
     this.payments.set(paymentId, payment);
     
-    console.log(`Payment created: ${paymentId} - Address: ${wallet.address}`);
+    logger.info("Payment created", { paymentId, address: wallet.address });
     
     return {
       paymentId,
@@ -54,12 +51,12 @@ export class EthereumPaymentProcessor {
       
       if (pendingPayments.length === 0) return;
       
-      console.log(`Checking ${pendingPayments.length} pending payments`);
+      logger.info(`Checking ${pendingPayments.length} pending payments`);
       
       for (const payment of pendingPayments) {
         await this.checkPayment(payment);
       }
-    }, this.POLLING_INTERVAL);
+    }, env.POLLING_INTERVAL);
   }
 
   private async checkPayment(payment: Payment): Promise<void> {
@@ -75,7 +72,7 @@ export class EthereumPaymentProcessor {
       );
 
       if (response.data.status !== '1') {
-        console.log(`No data found for address ${payment.address}`);
+        logger.warn("No data found for address", { address: payment.address });
         return;
       }
 
@@ -83,22 +80,26 @@ export class EthereumPaymentProcessor {
       const balanceEth = ethers.formatEther(balanceWei);
       const expectedAmount = parseFloat(payment.amount);
       
-      console.log(`Address ${payment.address}: Balance ${balanceEth} ETH, Expected: ${expectedAmount} ETH`);
+      logger.debug("Balance check", {
+        address: payment.address,
+        balance: balanceEth,
+        expected: expectedAmount,
+      });
       
       if (parseFloat(balanceEth) >= expectedAmount && balanceWei > 0n) {
-        console.log(`Payment received for ${payment.id}. Forwarding payment`);
+        logger.info("Payment received, forwarding", { paymentId: payment.id });
         await this.forwardPayment(payment, balanceWei);
       }
       
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 429) {
-          console.log(`Rate limited for address ${payment.address}, will retry later`);
+          logger.warn("Rate limited, will retry later", { address: payment.address });
         } else {
-          console.error(`Error checking payment ${payment.id}:`, error.message);
+          logger.error("Error checking payment", { paymentId: payment.id, message: error.message });
         }
       } else {
-        console.error(`Error checking payment ${payment.id}:`);
+        logger.error("Error checking payment", { paymentId: payment.id, error });
       }
     }
   }
@@ -113,38 +114,41 @@ export class EthereumPaymentProcessor {
       }
       
       const gasPrice = feeData.gasPrice;
-      const gasCost = gasPrice * BigInt(this.GAS_LIMIT);
+      const gasCost = gasPrice * BigInt(env.GAS_LIMIT);
       
       const amountToSend = balanceWei - gasCost;
       
       if (amountToSend <= 0n) {
-        console.error(`Insufficient ETH for gas fees. Balance: ${ethers.formatEther(balanceWei)}, Gas cost: ${ethers.formatEther(gasCost)}`);
+        logger.error("Insufficient ETH for gas fees", {
+          balance: ethers.formatEther(balanceWei),
+          gasCost: ethers.formatEther(gasCost),
+        });
         payment.status = 'failed';
         return;
       }
       
       const tx = await paymentWallet.sendTransaction({
-        to: this.MASTER_ADDRESS,
+        to: env.MASTER_ADDRESS,
         value: amountToSend,
-        gasLimit: this.GAS_LIMIT,
+        gasLimit: env.GAS_LIMIT,
         gasPrice: gasPrice
       });
       
-      console.log(`Transaction sent: ${tx.hash}`);
+      logger.info("Transaction sent", { txHash: tx.hash });
       
       const receipt = await tx.wait();
       
       if (receipt && receipt.status === 1) {
         payment.status = 'completed';
         payment.completedAt = new Date();
-        console.log(`Payment ${payment.id} forwarded successfully. TX: ${tx.hash}`);
+        logger.info("Payment forwarded successfully", { paymentId: payment.id, txHash: tx.hash });
       } else {
         payment.status = 'failed';
-        console.error(`Transaction failed: ${tx.hash}`);
+        logger.error("Transaction failed", { txHash: tx.hash });
       }
       
     } catch (error) {
-      console.error(`Error forwarding payment ${payment.id}:`, error);
+      logger.error("Error forwarding payment", { paymentId: payment.id, error });
       payment.status = 'failed';
     }
   }

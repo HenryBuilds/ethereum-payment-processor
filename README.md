@@ -1,16 +1,16 @@
-# 💳 Ethereum Payment Processor
+# Ethereum Payment Processor
 
 A simple, automated Ethereum payment processor that generates unique wallets for each payment and forwards received ETH to your main address.
 
-## 🚀 Features
+## Features
 
-- 🔐 **HD Wallet Generation** - Unique address for each payment
-- 👀 **Automatic Monitoring** - Polls Etherscan API for incoming payments
-- ⚡ **Auto-Forward** - Automatically forwards ETH to your main address
-- 🛡️ **Gas Optimization** - Calculates optimal gas fees
-- 📊 **REST API** - Simple endpoints for payment creation and status
+- **HD Wallet Generation** — Unique address for each payment
+- **Automatic Monitoring** — Polls Etherscan API for incoming payments
+- **Auto-Forward** — Automatically forwards ETH to your main address
+- **Gas Optimization** — Calculates optimal gas fees
+- **REST API** — Simple endpoints for payment creation and status
 
-## ⚙️ Quick Setup
+## Quick Setup
 
 ### 1. Install Dependencies
 ```bash
@@ -27,21 +27,14 @@ PORT=3000
 ```
 
 ### 3. Get RPC Access (Free)
-Choose one option:
 
-**🔸 Infura** (Recommended)
-1. Sign up at [infura.io](https://infura.io)
-2. Create a new project
-3. Copy your Project ID
-4. Use: `https://mainnet.infura.io/v3/YOUR_PROJECT_ID`
+**Infura** (Recommended)
+- Sign up at [infura.io](https://infura.io), create a project, and use `https://mainnet.infura.io/v3/YOUR_PROJECT_ID`
 
-**🔸 Alchemy**
-1. Sign up at [alchemy.com](https://alchemy.com)
-2. Create a new app
-3. Copy your API key
-4. Use: `https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY`
+**Alchemy**
+- Sign up at [alchemy.com](https://alchemy.com), create an app, and use `https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY`
 
-**🔸 Public RPC** (No signup required)
+**Public RPC** (No signup required)
 - `https://ethereum.publicnode.com`
 - `https://rpc.ankr.com/eth`
 
@@ -54,7 +47,7 @@ npm run dev
 npm run build && npm start
 ```
 
-## 🔧 API Usage
+## API Usage
 
 ### Create Payment
 ```bash
@@ -66,7 +59,7 @@ curl -X POST http://localhost:3000/payment/create \
   }'
 ```
 
-**Response:**
+Response:
 ```json
 {
   "success": true,
@@ -88,15 +81,15 @@ curl http://localhost:3000/payment/{paymentId}/status
 curl http://localhost:3000/payments
 ```
 
-## 📝 How It Works
+## How It Works
 
-1. **Payment Creation** → Generates a new HD wallet
-2. **Customer Payment** → Customer sends ETH to the generated address
-3. **Monitoring** → System polls Etherscan API every 30 seconds
-4. **Auto-Forward** → Once payment is detected, forwards ETH to your main address
-5. **Completion** → Payment status updated to 'completed'
+1. **Payment Creation** — Generates a new HD wallet
+2. **Customer Payment** — Customer sends ETH to the generated address
+3. **Monitoring** — System polls Etherscan API every 30 seconds
+4. **Auto-Forward** — Once payment is detected, forwards ETH to your main address
+5. **Completion** — Payment status updated to `completed`
 
-## ⚠️ Important Notes
+## Important Notes
 
 - Keep your `MASTER_ADDRESS` private key secure
 - The system only needs your receiving address, not private keys
@@ -104,11 +97,10 @@ curl http://localhost:3000/payments
 - Use testnet for development and testing
 - Monitor gas prices for cost optimization
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Node.js** + **TypeScript**
-- **Express.js** - REST API
-- **ethers.js** - Ethereum interaction
-- **Etherscan API** - Balance monitoring
-- **Axios** - HTTP requests
-
+- **Express.js** — REST API
+- **ethers.js** — Ethereum interaction
+- **winston** — Structured logging
+- **Etherscan API** — Balance monitoring

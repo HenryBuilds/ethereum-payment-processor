@@ -1,6 +1,8 @@
 import express from "express";
+import { env } from "./env";
 import { EthereumPaymentProcessor } from "./EthereumPaymentProcessor";
 import { CreatePaymentRequest } from "./types";
+import logger from "./logger";
 
 const app = express();
 app.use(express.json());
@@ -31,7 +33,7 @@ app.post("/payment/create", (req, res) => {
       data: payment,
     });
   } catch (error) {
-    console.error("Error creating payment:", error);
+    logger.error("Error creating payment", { error });
     res.status(500).json({
       error: "Internal server error",
     });
@@ -56,7 +58,7 @@ app.get("/payment/:paymentId/status", (req, res) => {
       data: safePayment,
     });
   } catch (error) {
-    console.error("Error retrieving payment status:", error);
+    logger.error("Error retrieving payment status", { error });
     res.status(500).json({
       error: "Internal server error",
     });
@@ -75,27 +77,27 @@ app.get("/payments", (req, res) => {
       data: payments,
     });
   } catch (error) {
-    console.error("Error retrieving payments:", error);
+    logger.error("Error retrieving payments", { error });
     res.status(500).json({
       error: "Internal server error",
     });
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`Ethereum Payment Processor running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });
 
 process.on("SIGTERM", () => {
-  console.log("Shutting down payment processor");
+  logger.info("Shutting down payment processor");
   paymentProcessor.stop();
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
-  console.log("Shutting down payment processor");
+  logger.info("Shutting down payment processor");
   paymentProcessor.stop();
   process.exit(0);
 });
