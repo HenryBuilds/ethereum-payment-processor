@@ -24,9 +24,38 @@ const envSchema = z.object({
     .default("21000")
     .transform(Number)
     .pipe(z.number().int().positive()),
+  DATABASE_URL: z
+    .string()
+    .url("Must be a valid PostgreSQL connection URL"),
   LOG_LEVEL: z
     .enum(["error", "warn", "info", "debug"])
     .default("info"),
+  ETHERSCAN_API_KEY: z
+    .string()
+    .default(""),
+  API_KEY: z
+    .string()
+    .min(1, "API_KEY is required for authentication"),
+  PAYMENT_TIMEOUT_MINUTES: z
+    .string()
+    .default("60")
+    .transform(Number)
+    .pipe(z.number().int().min(1)),
+  REQUIRED_CONFIRMATIONS: z
+    .string()
+    .default("1")
+    .transform(Number)
+    .pipe(z.number().int().min(0)),
+  RATE_LIMIT_WINDOW_MS: z
+    .string()
+    .default("60000")
+    .transform(Number)
+    .pipe(z.number().int().positive()),
+  RATE_LIMIT_MAX: z
+    .string()
+    .default("100")
+    .transform(Number)
+    .pipe(z.number().int().positive()),
 });
 
 const parsed = envSchema.safeParse(process.env);
