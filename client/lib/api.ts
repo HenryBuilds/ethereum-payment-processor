@@ -1,14 +1,64 @@
-import type {
-  Payment,
-  SafePayment,
-  Merchant,
-  Webhook,
-  WebhookEvent,
-  AnalyticsSummary,
-  PriceData,
-} from "@server/types";
+// Shared types (mirrored from backend src/types.ts)
+export type Payment = {
+  id: string;
+  orderId: string;
+  merchantId: string | null;
+  address: string;
+  privateKey: string;
+  amount: string;
+  currency: string;
+  tokenAddress: string | null;
+  status: "pending" | "completed" | "failed" | "expired" | "partial" | "cancelled" | "refunded";
+  receivedAmount: string | null;
+  txHash: string | null;
+  refundTxHash: string | null;
+  gasUsed: string | null;
+  gasCost: string | null;
+  confirmations: number;
+  createdAt: Date;
+  completedAt: Date | null;
+  expiresAt: Date | null;
+};
 
-export type { Payment, SafePayment, Merchant, Webhook, WebhookEvent, AnalyticsSummary, PriceData };
+export type SafePayment = Omit<Payment, "privateKey">;
+
+export type Merchant = {
+  id: string;
+  name: string;
+  email: string | null;
+  apiKey: string;
+  createdAt: Date;
+};
+
+export type WebhookEvent = "payment.completed" | "payment.failed" | "payment.expired" | "payment.partial" | "payment.cancelled" | "payment.refunded";
+
+export type Webhook = {
+  id: string;
+  merchantId: string | null;
+  url: string;
+  secret: string;
+  events: WebhookEvent[];
+  active: boolean;
+  createdAt: Date;
+};
+
+export type AnalyticsSummary = {
+  totalPayments: number;
+  completedPayments: number;
+  failedPayments: number;
+  expiredPayments: number;
+  pendingPayments: number;
+  totalVolumeETH: string;
+  totalGasCostETH: string;
+  averagePaymentETH: string;
+  byStatus: Record<string, number>;
+  byCurrency: Record<string, { count: number; volume: string }>;
+};
+
+export type PriceData = {
+  ethUsd: number;
+  updatedAt: Date;
+};
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
