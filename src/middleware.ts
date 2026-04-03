@@ -26,6 +26,22 @@ export const apiKeyAuth = (req: Request, res: Response, next: NextFunction): voi
   next();
 };
 
+export const demoGuard = (req: Request, res: Response, next: NextFunction): void => {
+  if (!env.DEMO_MODE) {
+    next();
+    return;
+  }
+
+  if (req.method === "GET") {
+    next();
+    return;
+  }
+
+  res.status(403).json({
+    error: "This action is disabled in demo mode. Clone the repository to run your own instance: https://github.com/HenryBuilds/ethereum-payment-processor",
+  });
+};
+
 export const rateLimiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_MAX,

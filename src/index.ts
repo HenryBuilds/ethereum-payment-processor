@@ -5,7 +5,7 @@ import { EthereumPaymentProcessor } from "./EthereumPaymentProcessor";
 import { CreatePaymentRequest, CreateMerchantRequest, RegisterWebhookRequest, SUPPORTED_TOKENS, SafePayment, AnalyticsSummary } from "./types";
 import logger from "./logger";
 import { initDatabase, closeDatabase, getAllPayments, insertMerchant, getMerchantById, getAllMerchants, insertWebhook, getAllWebhooks, getWebhooksByMerchant, deleteWebhook, getAnalytics } from "./database";
-import { apiKeyAuth, rateLimiter } from "./middleware";
+import { apiKeyAuth, rateLimiter, demoGuard } from "./middleware";
 import { getEthPrice, ethToUsd, usdToEth } from "./priceService";
 
 async function main() {
@@ -16,6 +16,7 @@ async function main() {
   app.use(express.json());
   app.use(rateLimiter);
   app.use(apiKeyAuth);
+  app.use(demoGuard);
 
   const paymentProcessor = new EthereumPaymentProcessor();
 

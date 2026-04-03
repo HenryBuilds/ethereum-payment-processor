@@ -56,6 +56,10 @@ const envSchema = z.object({
     .default("100")
     .transform(Number)
     .pipe(z.number().int().positive()),
+  DEMO_MODE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
 });
 
 const parsed = envSchema.safeParse(process.env);
