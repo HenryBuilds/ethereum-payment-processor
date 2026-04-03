@@ -169,14 +169,16 @@ export function VolumeTimeline({ payments, loading }: VolumeTimelineProps) {
               dataKey="label"
               tick={{ fontSize: 11, fill: "#e5e5e5", fontWeight: 500 }}
               axisLine={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
-              tickLine={{ stroke: "rgba(255,255,255,0.15)", size: 4 }}
+              tickLine={{ stroke: "rgba(255,255,255,0.15)" }}
+              tickSize={4}
               tickMargin={6}
               interval={range === "30d" ? 4 : range === "1d" ? 3 : "preserveStartEnd"}
             />
             <YAxis
               tick={{ fontSize: 11, fill: "#e5e5e5", fontWeight: 500 }}
               axisLine={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
-              tickLine={{ stroke: "rgba(255,255,255,0.15)", size: 4 }}
+              tickLine={{ stroke: "rgba(255,255,255,0.15)" }}
+              tickSize={4}
               tickMargin={4}
               width={48}
             />
