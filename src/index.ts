@@ -8,7 +8,7 @@ import { initDatabase, closeDatabase, getAllPayments, insertMerchant, getMerchan
 import { apiKeyAuth, rateLimiter, demoGuard } from "./middleware";
 import { getEthPrice, ethToUsd, usdToEth } from "./priceService";
 
-async function main() {
+async function createApp() {
   await initDatabase();
 
   const app = express();
@@ -414,35 +414,45 @@ async function main() {
     }
   });
 
-  // Start Server
-
-  const PORT = env.PORT;
-
-  app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT}`);
-    logger.info(`API Key auth enabled`);
-    logger.info(`Rate limiting: ${env.RATE_LIMIT_MAX} requests per ${env.RATE_LIMIT_WINDOW_MS}ms`);
-    logger.info(`Payment timeout: ${env.PAYMENT_TIMEOUT_MINUTES} minutes`);
-    logger.info(`Required confirmations: ${env.REQUIRED_CONFIRMATIONS}`);
-    logger.info(`Supported currencies: ETH, ${Object.keys(SUPPORTED_TOKENS).join(", ")}`);
-  });
-
-  process.on("SIGTERM", async () => {
-    logger.info("Shutting down payment processor");
-    paymentProcessor.stop();
-    await closeDatabase();
-    process.exit(0);
-  });
-
-  process.on("SIGINT", async () => {
-    logger.info("Shutting down payment processor");
-    paymentProcessor.stop();
-    await closeDatabase();
-    process.exit(0);
-  });
+  return app;
 }
 
-main().catch((err) => {
-  console.error("Failed to start server:", err);
-  process.exit(1);
-});
+// Vercel serverless: export the app
+let appPromise: ReturnType<typeof createApp>;
+
+function getApp() {
+  if (!appPromise) appPromise = createApp();
+  return appPromise;
+}
+
+export default async function handler(req: any, res: any) {
+  const app = await getApp();
+  return app(req, res);
+}
+
+// Local dev: start with app.listen
+if (process.env.VERCEL !== "1") {
+  getApp().then((app) => {
+    const PORT = env.PORT;
+    app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`API Key auth enabled`);
+      logger.info(`Rate limiting: ${env.RATE_LIMIT_MAX} requests per ${env.RATE_LIMIT_WINDOW_MS}ms`);
+      logger.info(`Payment timeout: ${env.PAYMENT_TIMEOUT_MINUTES} minutes`);
+      logger.info(`Required confirmations: ${env.REQUIRED_CONFIRMATIONS}`);
+      logger.info(`Supported currencies: ETH, ${Object.keys(SUPPORTED_TOKENS).join(", ")}`);
+    });
+
+    process.on("SIGTERM", async () => {
+      logger.info("Shutting down");
+      await closeDatabase();
+      process.exit(0);
+    });
+
+    process.on("SIGINT", async () => {
+      logger.info("Shutting down");
+      await closeDatabase();
+      process.exit(0);
+    });
+  });
+}
